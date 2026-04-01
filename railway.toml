@@ -1,0 +1,11 @@
+[build]
+builder = "NIXPACKS"
+
+[build.buildpackConfig]
+jdkVersion = "21"
+
+[deploy]
+startCommand = "java -Dserver.port=$PORT -jar target/restaurant-ordering-system-1.0.0.jar"
+healthcheckPath = "/menu"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
