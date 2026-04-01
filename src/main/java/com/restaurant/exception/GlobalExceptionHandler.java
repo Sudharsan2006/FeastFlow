@@ -47,10 +47,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    // ─── 401 Auth Errors (wrong password, email not found, email taken) ────────
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex) {
+        String msg = ex.getMessage();
+        if (msg != null && (msg.contains("Invalid email") || msg.contains("password") || msg.contains("registered"))) {
+            return buildErrorResponse(HttpStatus.UNAUTHORIZED, msg);
+        }
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, msg != null ? msg : "Bad request");
+    }
+
     // ─── 500 Internal Server Error ────────────────────────────────────────────
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred: " + ex.getMessage());
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
 
     // ─── Helper Method ────────────────────────────────────────────────────────

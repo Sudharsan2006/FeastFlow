@@ -32,6 +32,8 @@ public class SecurityConfig {
             .cors(cors -> {})                          // use CorsFilter bean from CorsConfig
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // ── CORS preflight — never block OPTIONS ──────────────────
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // ── Public endpoints ──────────────────────────────────────
                 .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
                 .requestMatchers(HttpMethod.GET,  "/menu").permitAll()
