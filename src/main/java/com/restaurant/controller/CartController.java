@@ -8,48 +8,53 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.List;
+import java.util.Map;
 
-/**
- * REST Controller for Cart operations.
- * Base URL: /cart
- */
 @RestController
 @RequestMapping("/cart")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class CartController {
 
     private final CartService cartService;
 
-    // ─── POST /cart/add ────────────────────────────────────────────────────────
-    /**
-     * Adds a menu item to the cart.
-     * Request Body: { "menuId": 1, "quantity": 2 }
-     */
-    @PostMapping("/add")
-    public ResponseEntity<Cart> addToCart(@Valid @RequestBody CartRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(cartService.addToCart(request));
+    /** POST /cart  — add item (frontend sends {menuItemId, quantity}) */
+    @PostMapping
+    public ResponseEntity<Cart> addToCart(@RequestBody Map<String, Object> body) {
+        CartRequest req = new CartRequest();
+        // Accept both "menuItemId" (frontend) and "menuId" (legacy)
+        Object id = body.getOrDefault("menuItemId", body.get("menuId"));
+        Object qty = body.getOrDefault("quantity", 1);
+        req.setMenuId(Long.valueOf(id.toString()));
+        req.setQuantity(Integer.valueOf(qty.toString()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(cartService.addToCart(req));
     }
 
-    // ─── GET /cart ─────────────────────────────────────────────────────────────
-    /**
-     * Returns all items currently in the cart.
-     */
+    /** GET /cart  — view all cart items */
     @GetMapping
     public ResponseEntity<List<Cart>> viewCart() {
         return ResponseEntity.ok(cartService.viewCart());
     }
 
-    // ─── DELETE /cart/clear ────────────────────────────────────────────────────
-    /**
-     * Clears all items from the cart.
-     */
-    @DeleteMapping("/clear")
+    /** PUT /cart/{id}  — update quantity */
+    @PutMapping("/{id}")
+    public ResponseEntity<Cart> updateCart(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        int quantity = Integer.parseInt(body.getOrDefault("quantity", 1).toString());
+        return ResponseEntity.ok(cartService.updateCartItem(id, quantity));
+    }
+
+    /** DELETE /cart/{id}  — remove single item */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> removeItem(@PathVariable Long id) {
+        cartService.removeCartItem(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** DELETE /cart  — clear entire cart */
+    @DeleteMapping
     public ResponseEntity<String> clearCart() {
         cartService.clearCart();
-        return ResponseEntity.ok("Cart cleared successfully.");
+        return ResponseEntity.ok("Cart cleared");
     }
 }

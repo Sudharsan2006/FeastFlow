@@ -53,11 +53,20 @@ public class CartService {
         return cartRepository.findAll();
     }
 
-    // ─── Clear Cart ────────────────────────────────────────────────────────────
+    // ─── Update Quantity ───────────────────────────────────────────────────────
+    public Cart updateCartItem(Long id, int quantity) {
+        Cart item = cartRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+        item.setQuantity(quantity);
+        return cartRepository.save(item);
+    }
 
-    /**
-     * Clears all items from the cart after an order is placed.
-     */
+    // ─── Remove Single Item ────────────────────────────────────────────────────
+    public void removeCartItem(Long id) {
+        cartRepository.deleteById(id);
+    }
+
+    // ─── Clear Cart ────────────────────────────────────────────────────────────
     public void clearCart() {
         log.info("Clearing cart");
         cartRepository.deleteAll();
